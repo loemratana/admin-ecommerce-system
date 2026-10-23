@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/logo/system-logo.png" />
+    <title>OnlineShop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Apply the saved theme before first paint so dark mode doesn't flash white.
+      try {
+        if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
+    <style>
+      /* Shown until React mounts; mirrors src/components/common/AppLoader.tsx. */
+      #boot-loader { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9fafb; font-family: Inter, system-ui, sans-serif; transition: opacity 0.25s ease-out; }
+      .dark #boot-loader { background: #101828; }
+      #boot-loader .ring { position: relative; width: 112px; height: 112px; display: flex; align-items: center; justify-content: center; }
+      #boot-loader svg { position: absolute; inset: 0; animation: boot-spin 1.4s linear infinite; }
+      #boot-loader .track { stroke: #e4e7ec; }
+      .dark #boot-loader .track { stroke: #1d2939; }
+      #boot-loader .card { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #fff; box-shadow: 0 4px 8px -2px rgba(16, 24, 40, 0.1); outline: 1px solid #e4e7ec; }
+      .dark #boot-loader .card { background: #1d2939; outline-color: #344054; }
+      #boot-loader img { width: 44px; height: 44px; object-fit: contain; }
+      #boot-loader .name { margin-top: 24px; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: #1d2939; }
+      .dark #boot-loader .name { color: rgba(255, 255, 255, 0.9); }
+      #boot-loader .msg { margin-top: 4px; font-size: 14px; color: #667085; }
+      .dark #boot-loader .msg { color: #98a2b3; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { #boot-loader svg { animation: none; } }
+    </style>
+  </head>
+  <body class="dark:bg-gray-900">
+    <div id="boot-loader" role="status" aria-live="polite">
+      <div class="ring">
+        <svg viewBox="0 0 112 112" aria-hidden="true">
+          <circle class="track" cx="56" cy="56" r="52" fill="none" stroke-width="3" />
+          <circle cx="56" cy="56" r="52" fill="none" stroke="#465fff" stroke-width="3" stroke-linecap="round" stroke-dasharray="80 247" />
+        </svg>
+        <div class="card"><img src="/images/logo/system-logo.png" alt="" /></div>
+      </div>
+      <div class="name">OnlineShop</div>
+      <div class="msg">Starting your store…</div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
