@@ -5,6 +5,8 @@ import { uploadImage } from "@/lib/api/uploads";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { Spinner } from "@/components/ui/spinner";
 import { Link } from "react-router";
+import { PRODUCT_TYPE_OPTIONS } from "@/features/products/types/product.types";
+import { salePrice } from "@/features/products/utils/pricing";
 
 // Backend multipart limit is 10MB (spring.servlet.multipart.max-file-size).
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -16,6 +18,10 @@ export type BasicInfoValues = {
   description: string;
   subCategoryId: string;
   brandId: string;
+  /** "" = not set, otherwise a ProductType. */
+  productType: string;
+  /** Product-wide discount %, "" = none. */
+  discountPercent: string;
 };
 
 type Option = { value: string; label: string };
@@ -35,7 +41,7 @@ export function BasicInformation({ values, subCategories, brands, onChange }: Ba
     </label>
   );
 
-  const select = (label: string, field: "subCategoryId" | "brandId", options: Option[], placeholder: string) => (
+  const select = (label: string, field: "subCategoryId" | "brandId" | "productType", options: Option[], placeholder: string) => (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>
       <select value={values[field]} onChange={(event) => onChange(field, event.target.value)} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
@@ -54,6 +60,24 @@ export function BasicInformation({ values, subCategories, brands, onChange }: Ba
         <p className="-mt-2 text-xs text-slate-400 md:col-start-2">Used for the product URL.</p>
         {select("Subcategory", "subCategoryId", subCategories, "Select subcategory")}
         {select("Brand", "brandId", brands, "Select brand (optional)")}
+        {select("Product Type", "productType", PRODUCT_TYPE_OPTIONS, "Select type (optional)")}
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">Product Discount (%)</span>
+          <div className="relative">
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step="any"
+              value={values.discountPercent}
+              onChange={(event) => onChange("discountPercent", event.target.value)}
+              placeholder="0"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
+          </div>
+          <span className="mt-1 block text-xs text-slate-400">Applies to every variant without its own discount.</span>
+        </label>
         <label className="md:col-span-2">
           <span className="mb-1.5 block text-sm font-medium text-slate-700">Description</span>
           <textarea value={values.description} onChange={(event) => onChange("description", event.target.value)} placeholder="Describe the product..." rows={4} className="w-full resize-y rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
@@ -211,25 +235,28 @@ export function ProductImages({ images, imageCover, onImageCoverChange, onAdd, o
 
 type VariantsProps = {
   variants: ProductVariant[];
+  /** Product-wide discount %, shown as the fallback for variants without their own. */
+  productDiscount?: number;
   sizes: (Option & { active: boolean })[];
   onAdd: () => void;
   onChange: (id: string, field: keyof ProductVariant, value: string | number) => void;
   onDelete: (id: string) => void;
 };
 
-export function ProductVariants({ variants, sizes, onAdd, onChange, onDelete }: VariantsProps) {
+export function ProductVariants({ variants, productDiscount, sizes, onAdd, onChange, onDelete }: VariantsProps) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/30">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <h2 className="text-base font-semibold text-slate-900">Product Variants</h2>
           <p className="mt-1 text-sm text-slate-500">Each row is a unique SKU. Set opening stock for new rows; after saving, change stock from the inventory page. Manage the size list under Catalog → Sizes.</p>
+          {productDiscount ? <p className="mt-1 text-xs text-slate-400">Leave a variant's discount empty to use the product discount ({productDiscount}%).</p> : null}
         </div>
       </div>
       <div className="mt-5 overflow-x-auto rounded-lg border border-slate-200">
-        <table className="min-w-[820px] w-full text-left text-xs">
+        <table className="min-w-[900px] w-full text-left text-xs">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
-            <tr>{["Color", "Size", "SKU", "Price", "Price After Discount", "Stock", ""].map((heading) => <th key={heading} className="px-3 py-3 font-semibold">{heading}</th>)}</tr>
+            <tr>{["Color", "Size", "SKU", "Price", "Discount (%)", "Price After Discount", "Stock", ""].map((heading) => <th key={heading} className="px-3 py-3 font-semibold">{heading}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {variants.map((variant) => (
@@ -246,11 +273,50 @@ export function ProductVariants({ variants, sizes, onAdd, onChange, onDelete }: 
                     ))}
                   </select>
                 </td>
-                {(["sku", "price", "priceAfterDiscount"] as const).map((field) => (
-                  <td key={field} className="px-2 py-2">
-                    <input type={field === "sku" ? "text" : "number"} value={variant[field]} onChange={(event) => onChange(variant.id, field, field === "sku" ? event.target.value : Number(event.target.value))} className="h-8 w-full min-w-[90px] rounded border border-slate-200 px-2 text-xs outline-none focus:border-blue-500" />
-                  </td>
-                ))}
+                <td className="px-2 py-2">
+                  <input
+                    value={variant.sku}
+                    onChange={(event) => onChange(variant.id, "sku", event.target.value)}
+                    className="h-8 w-full min-w-[90px] rounded border border-slate-200 px-2 text-xs outline-none focus:border-blue-500"
+                  />
+                </td>
+                <td className="px-2 py-2">
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={variant.price || ""}
+                    placeholder="0.00"
+                    onChange={(event) => onChange(variant.id, "price", event.target.value === "" ? 0 : Number(event.target.value))}
+                    className="h-8 w-full min-w-[80px] rounded border border-slate-200 px-2 text-xs outline-none focus:border-blue-500"
+                  />
+                </td>
+                <td className="px-2 py-2">
+                  <div className="relative min-w-[75px]">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={variant.discountPercent !== undefined && variant.discountPercent !== null ? variant.discountPercent : ""}
+                      placeholder={productDiscount ? String(productDiscount) : "0"}
+                      title={productDiscount ? `Empty = product discount (${productDiscount}%)` : undefined}
+                      onChange={(event) => onChange(variant.id, "discountPercent", event.target.value === "" ? "" : Number(event.target.value))}
+                      className="h-8 w-full rounded border border-slate-200 pl-2 pr-6 text-xs outline-none focus:border-blue-500"
+                    />
+                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">%</span>
+                  </div>
+                </td>
+                <td className="px-2 py-2">
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={variant.priceAfterDiscount || ""}
+                    placeholder={productDiscount && variant.price > 0 ? salePrice(variant, productDiscount).toFixed(2) : "0.00"}
+                    onChange={(event) => onChange(variant.id, "priceAfterDiscount", event.target.value === "" ? 0 : Number(event.target.value))}
+                    className="h-8 w-full min-w-[90px] rounded border border-slate-200 px-2 text-xs outline-none focus:border-blue-500"
+                  />
+                </td>
                 <td className="px-2 py-2">
                   {variant.serverId ? (
                     // Saved variant: stock moves only through logged inventory actions.

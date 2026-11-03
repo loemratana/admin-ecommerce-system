@@ -2,6 +2,7 @@ import { Archive, ArchiveRestore, Eye, Pencil } from "lucide-react";
 import { Link } from "react-router";
 import type { Product, ProductAction } from "@/features/products/types/product-list.types";
 import TableActionMenu from "@/components/common/TableActionMenu";
+import ProductImage from "@/features/products/components/ProductImage";
 import { formatMoney } from "@/lib/currency";
 
 type ProductsTableProps = {
@@ -55,7 +56,7 @@ function ActionMenu({ product, onAction }: { product: Product; onAction: Product
 }
 
 function ProductIdentity({ product }: { product: Product }) {
-  return <div className="flex min-w-[220px] items-center gap-3"><img src={product.image} alt="" loading="lazy" decoding="async" className="h-12 w-12 rounded-lg object-cover ring-1 ring-slate-200" /><div><Link to={`/catalog/products/${product.id}`} className="font-semibold text-slate-800 hover:text-blue-600">{product.name}</Link><p className="mt-0.5 text-xs text-slate-400">SKU: {product.sku}</p></div></div>;
+  return <div className="flex min-w-[220px] items-center gap-3"><ProductImage src={product.image} className="h-12 w-12 shrink-0 rounded-lg ring-1 ring-slate-200" /><div><Link to={`/catalog/products/${product.id}`} className="font-semibold text-slate-800 hover:text-blue-600">{product.name}</Link><p className="mt-0.5 text-xs text-slate-400">SKU: {product.sku}</p></div></div>;
 }
 
 export default function ProductsTable({ products, selectedIds, onToggle, onToggleAll, onAction }: ProductsTableProps) {
@@ -64,12 +65,114 @@ export default function ProductsTable({ products, selectedIds, onToggle, onToggl
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-200/40">
       <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-[1060px] text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500"><tr><th className="w-12 px-5 py-3"><input type="checkbox" checked={allSelected} onChange={onToggleAll} aria-label="Select all products" className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" /></th><th className="px-3 py-3">Product</th><th className="px-3 py-3">Category</th><th className="px-3 py-3">Brand</th><th className="px-3 py-3">Variants</th><th className="px-3 py-3">Price</th><th className="px-3 py-3">Stock</th><th className="px-3 py-3">Status</th><th className="px-3 py-3">Updated</th><th className="w-16 px-3 py-3" /></tr></thead>
-          <tbody className="divide-y divide-slate-100">{products.map((product) => <tr key={product.id} className="transition hover:bg-slate-50/70"><td className="px-5 py-4"><input type="checkbox" checked={selectedIds.includes(product.id)} onChange={() => onToggle(product.id)} aria-label={`Select ${product.name}`} className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" /></td><td className="px-3 py-4"><ProductIdentity product={product} /></td><td className="px-3 py-4 text-slate-600">{product.category}</td><td className="px-3 py-4 text-slate-600">{product.brand}</td><td className="px-3 py-4"><p className="font-medium text-slate-700">{product.variants} variants</p><p className="text-xs text-slate-400">{product.colors} colors · {product.sizes} sizes</p></td><td className="px-3 py-4"><p className="font-semibold text-slate-800">{product.originalPrice && <span className="mr-1 text-xs font-normal text-slate-400 line-through">{formatMoney(product.originalPrice)}</span>}{formatMoney(product.price)}</p><p className="text-xs text-slate-400">{product.originalPrice ? "Sale price" : "From"}</p></td><td className="px-3 py-4"><StockValue product={product} /></td><td className="px-3 py-4"><StatusBadge status={product.status} /></td><td className="px-3 py-4 whitespace-nowrap text-xs text-slate-500">{product.updated}</td><td className="px-3 py-4"><ActionMenu product={product} onAction={onAction} /></td></tr>)}</tbody>
+        <table className="w-full min-w-[1200px] text-left text-sm">
+          <thead className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th className="w-12 px-5 py-3"><input type="checkbox" checked={allSelected} onChange={onToggleAll} aria-label="Select all products" className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" /></th>
+              <th className="px-3 py-3">Product</th>
+              <th className="px-3 py-3">Category</th>
+              <th className="px-3 py-3">Brand</th>
+              <th className="px-3 py-3">Type</th>
+              <th className="px-3 py-3">Variants</th>
+              <th className="px-3 py-3">Price</th>
+              <th className="px-3 py-3">Discount</th>
+              <th className="px-3 py-3">Stock</th>
+              <th className="px-3 py-3">Status</th>
+              <th className="px-3 py-3">Updated</th>
+              <th className="w-16 px-3 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {products.map((product) => (
+              <tr key={product.id} className="transition hover:bg-slate-50/70">
+                <td className="px-5 py-4"><input type="checkbox" checked={selectedIds.includes(product.id)} onChange={() => onToggle(product.id)} aria-label={`Select ${product.name}`} className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" /></td>
+                <td className="px-3 py-4"><ProductIdentity product={product} /></td>
+                <td className="px-3 py-4 text-slate-600">{product.category}</td>
+                <td className="px-3 py-4 text-slate-600">{product.brand}</td>
+                <td className="px-3 py-4 text-slate-600">{product.type}</td>
+                <td className="px-3 py-4">
+                  <p className="font-medium text-slate-700">{product.variants} variants</p>
+                  <p className="text-xs text-slate-400">{product.colors} colors · {product.sizes} sizes</p>
+                </td>
+                <td className="px-3 py-4">
+                  <p className="font-semibold text-slate-800">
+                    {formatMoney(product.price)}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {product.originalPrice && (
+                      <span className="mr-1 line-through">{formatMoney(product.originalPrice)}</span>
+                    )}
+                    {product.variants > 1 ? "From" : ""}
+                  </p>
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap">
+                  {product.discountPercent && product.discountPercent > 0 ? (
+                    <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 ring-1 ring-inset ring-red-600/20">
+                      {product.hasMixedDiscounts ? `Up to ${product.discountPercent}%` : `${product.discountPercent}%`}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-4"><StockValue product={product} /></td>
+                <td className="px-3 py-4"><StatusBadge status={product.status} /></td>
+                <td className="px-3 py-4 whitespace-nowrap text-xs text-slate-500">{product.updated}</td>
+                <td className="px-3 py-4"><ActionMenu product={product} onAction={onAction} /></td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
-      <div className="divide-y divide-slate-100 lg:hidden">{products.map((product) => <article key={product.id} className="p-4"><div className="flex items-start justify-between gap-3"><ProductIdentity product={product} /><ActionMenu product={product} onAction={onAction} /></div><div className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><p className="text-xs text-slate-400">Price</p><p className="mt-1 font-semibold text-slate-800">From {formatMoney(product.price)}</p></div><div><p className="text-xs text-slate-400">Stock</p><StockValue product={product} /></div></div><div className="mt-4 flex items-center justify-between"><StatusBadge status={product.status} /><label className="flex items-center gap-2 text-xs text-slate-500"><input type="checkbox" checked={selectedIds.includes(product.id)} onChange={() => onToggle(product.id)} className="h-4 w-4 rounded border-slate-300 text-blue-600" /> Select</label></div></article>)}</div>
+      <div className="divide-y divide-slate-100 lg:hidden">
+        {products.map((product) => (
+          <article key={product.id} className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <ProductIdentity product={product} />
+              <ActionMenu product={product} onAction={onAction} />
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-slate-400">Price</p>
+                <div className="mt-1 flex items-baseline gap-1.5">
+                  <p className="font-semibold text-slate-800">From {formatMoney(product.price)}</p>
+                  {product.discountPercent && product.discountPercent > 0 && (
+                    <span className="text-xs font-semibold text-red-600">
+                      -{product.discountPercent}%
+                    </span>
+                  )}
+                </div>
+                {product.originalPrice && <p className="text-xs text-slate-400 line-through">{formatMoney(product.originalPrice)}</p>}
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Discount</p>
+                <p className="mt-1">
+                  {product.discountPercent && product.discountPercent > 0 ? (
+                    <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600 ring-1 ring-inset ring-red-600/20">
+                      {product.hasMixedDiscounts ? `Up to ${product.discountPercent}%` : `${product.discountPercent}%`}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">—</span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Stock</p>
+                <StockValue product={product} />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Type</p>
+                <p className="mt-1 font-medium text-slate-700">{product.type}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <StatusBadge status={product.status} />
+              <label className="flex items-center gap-2 text-xs text-slate-500">
+                <input type="checkbox" checked={selectedIds.includes(product.id)} onChange={() => onToggle(product.id)} className="h-4 w-4 rounded border-slate-300 text-blue-600" /> Select
+              </label>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }

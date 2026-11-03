@@ -42,13 +42,19 @@ function fallbackLogo(id: number) {
   return `/images/brand/brand-${String(index).padStart(2, "0")}.svg`;
 }
 
+// Logos come in any shape, so fit the whole logo inside the square instead of cropping it.
 function BrandLogo({ brand, className }: { brand: Brand; className: string }) {
-  if (brand.image) {
-    return <img src={brand.image} alt="" className={`${className} object-cover`} />;
-  }
+  const [failed, setFailed] = useState(false);
+  const src = brand.image && !failed ? brand.image : fallbackLogo(brand.id);
+
   return (
-    <span className={`${className} flex items-center justify-center bg-slate-50 p-1.5`}>
-      <img src={fallbackLogo(brand.id)} alt="" className="h-full w-full object-contain" />
+    <span className={`${className} flex items-center justify-center overflow-hidden border border-slate-200 bg-white p-1.5`}>
+      <img
+        src={src}
+        alt=""
+        onError={() => setFailed(true)}
+        className="max-h-full max-w-full object-contain"
+      />
     </span>
   );
 }

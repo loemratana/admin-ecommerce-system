@@ -14,7 +14,7 @@ import type { Product, ProductAction, ProductViewMode } from "@/features/product
 import { useArchiveProduct, useProducts, useProductStats } from "@/features/products/hooks/useProducts";
 import { useBrands } from "@/features/brands/hooks/useBrands";
 import { useSubCategories } from "@/features/sub-categories/hooks/useSubCategories";
-import type { CatalogStatus, ProductFilters } from "@/features/products/types/product.types";
+import { PRODUCT_TYPE_OPTIONS, type CatalogStatus, type ProductFilters } from "@/features/products/types/product.types";
 import { toUiProduct } from "@/features/products/utils/product.mapper";
 import { getApiErrorMessage } from "@/lib/api/errors";
 
@@ -47,7 +47,9 @@ export default function ProductsPage() {
       return next;
     });
   };
+  const typeParam = searchParams.get("type");
   const filters: ProductFilters = {
+    type: PRODUCT_TYPE_OPTIONS.find((option) => option.value === typeParam)?.value,
     brandId: getNumberParam(searchParams, "brandId"),
     subCategoryId: getNumberParam(searchParams, "subCategoryId"),
     minPrice: getNumberParam(searchParams, "minPrice"),

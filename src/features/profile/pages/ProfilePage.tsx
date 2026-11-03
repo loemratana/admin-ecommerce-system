@@ -6,6 +6,7 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import FadeIn from "@/components/common/FadeIn";
 import { ListSkeleton } from "@/components/common/Skeletons";
 import { Spinner } from "@/components/ui/spinner";
+import UserAvatar from "@/components/common/UserAvatar";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import Button from "@/components/ui/button/Button";
@@ -196,7 +197,7 @@ export default function ProfilePage() {
                 aria-label="Change profile photo"
                 className="group relative size-16 shrink-0 overflow-hidden rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:cursor-wait"
               >
-                <img src={user?.profileImage || "/images/user/owner.jpg"} alt="Profile" className="size-full object-cover" />
+                <UserAvatar name={user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.name : ""} image={user?.profileImage} className="size-full text-lg" />
                 <span className={`absolute inset-0 flex items-center justify-center bg-gray-900/50 text-white transition ${uploadingAvatar ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"}`}>
                   {uploadingAvatar ? <Spinner size="md" /> : <Camera className="size-5" />}
                 </span>

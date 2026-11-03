@@ -5,6 +5,7 @@ import { useChangeStock, type StockChange } from "@/features/inventory/hooks/use
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { productImage, variantLabel } from "@/features/inventory/utils/inventory.format";
 import type { AdjustmentMode, AdjustStockPayload, InventoryResponse } from "@/features/inventory/types/inventory.types";
+import ProductImage from "@/features/products/components/ProductImage";
 
 type Props = { item: InventoryResponse; onClose: () => void };
 
@@ -88,7 +89,7 @@ export default function StockAdjustmentDialog({ item, onClose }: Props) {
 
         <div className="p-5">
           <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
-            <img src={productImage(item)} alt="" className="h-12 w-12 rounded-lg object-cover" />
+            <ProductImage src={productImage(item)} className="h-12 w-12 shrink-0 rounded-lg" />
             <div>
               <p className="font-semibold text-slate-800">{item.product?.name}</p>
               <p className="text-xs text-slate-500">

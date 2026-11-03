@@ -21,6 +21,7 @@ const emptyForm: CouponFormState = {
   expiryDate: "",
   usageLimit: "",
   active: true,
+  showInStorefront: false,
 };
 const statuses: CouponStatus[] = ["Active", "Inactive", "Expired", "Used up"];
 
@@ -79,6 +80,7 @@ export default function CouponsPage() {
       expiryDate: coupon.expiryDate.slice(0, 10),
       usageLimit: coupon.usageLimit === null ? "" : String(coupon.usageLimit),
       active: coupon.active,
+      showInStorefront: coupon.showInStorefront ?? false,
     });
     setDialog("edit");
   };
@@ -103,6 +105,7 @@ export default function CouponsPage() {
       expiryDate: `${values.expiryDate}T23:59:59`,
       usageLimit: values.usageLimit === "" ? null : Number(values.usageLimit),
       active: values.active,
+      showInStorefront: values.showInStorefront,
     };
     setSaving(true);
     setFormError("");

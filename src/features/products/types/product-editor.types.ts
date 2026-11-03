@@ -6,6 +6,7 @@ export type ProductVariant = {
   sizeId: string;
   sku: string;
   price: number;
+  discountPercent?: number;
   priceAfterDiscount: number;
   /** Read-only: changed only by shipped orders. */
   soldQuantity: number;

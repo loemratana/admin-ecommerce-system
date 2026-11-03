@@ -40,6 +40,8 @@ export const ENDPOINTS = {
   subCategories: {
     base: `${API}/sub-categories`,
     byId: (id: number) => `${API}/sub-categories/${id}`,
+    // Parent category (with id) and products; /{id} alone returns the flat list row.
+    detail: (id: number) => `${API}/sub-categories/${id}/detail`,
   },
   brands: {
     base: `${API}/brands`,
@@ -100,7 +102,11 @@ export const ENDPOINTS = {
   settings: {
     base: `${API}/settings`,
     public: `${API}/settings/public`,
-    section: (section: "store" | "orders" | "localization" | "security") => `${API}/settings/${section}`,
+    section: (section: "store" | "orders" | "inventory" | "notifications" | "localization" | "security") => `${API}/settings/${section}`,
+    notificationDestinations: `${API}/settings/notification-destinations`,
+    notificationDestination: (id: number) => `${API}/settings/notification-destinations/${id}`,
+    notificationDestinationTest: (id: number) => `${API}/settings/notification-destinations/${id}/test`,
+    notificationChannels: `${API}/settings/notification-destinations/channels`,
   },
   returns: {
     base: `${API}/returns`,

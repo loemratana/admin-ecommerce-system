@@ -27,7 +27,9 @@ import {
   useSaveProduct,
 } from "@/features/products/hooks/useProducts";
 import { productEditorSchema } from "@/features/products/schemas/product.schema";
-import type { ProductRequest } from "@/features/products/types/product.types";
+import { positivePercent } from "@/features/products/utils/pricing";
+import { PRODUCT_TYPE_OPTIONS } from "@/features/products/types/product.types";
+import type { ProductRequest, ProductType } from "@/features/products/types/product.types";
 import { toast, Toaster } from "sonner";
 
 const initialValues: BasicInfoValues = {
@@ -36,6 +38,8 @@ const initialValues: BasicInfoValues = {
   description: "",
   subCategoryId: "",
   brandId: "",
+  productType: "",
+  discountPercent: "",
 };
 const slugify = (value: string) =>
   value
@@ -90,8 +94,12 @@ export default function ProductEditorPage() {
   const loadFailure =
     subCategoriesQuery.error ?? brandsQuery.error ?? productQuery.error;
   const [searchParams] = useSearchParams();
-  // A new product can be pre-assigned to a brand, e.g. from the brand detail page (?brandId=5).
-  const [values, setValues] = useState<BasicInfoValues>(() => ({ ...initialValues, brandId: editMode ? "" : searchParams.get("brandId") ?? "" }));
+  // A new product can be pre-assigned from a detail page, e.g. ?brandId=5 or ?subCategoryId=7.
+  const [values, setValues] = useState<BasicInfoValues>(() =>
+    editMode
+      ? initialValues
+      : { ...initialValues, brandId: searchParams.get("brandId") ?? "", subCategoryId: searchParams.get("subCategoryId") ?? "" },
+  );
   const [imageCover, setImageCover] = useState("");
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -111,6 +119,11 @@ export default function ProductEditorPage() {
         ? String(product.subCategory.subCategoryId)
         : "",
       brandId: product.brand ? String(product.brand.brandId) : "",
+      productType: product.productType ?? "",
+      discountPercent:
+        product.discountPercent !== undefined && product.discountPercent !== null
+          ? String(product.discountPercent)
+          : "",
     });
     setImageCover(product.imageCover || "");
     setImages(
@@ -129,7 +142,12 @@ export default function ProductEditorPage() {
         sizeId: variant.size ? String(variant.size.id) : "",
         sku: variant.sku,
         price: variant.price,
-        priceAfterDiscount: variant.priceAfterDiscount ?? 0,
+        // Only the variant's OWN discount goes in the field. Deriving it from priceAfterDiscount
+        // would copy the product-wide discount onto the variant and pin it there on save.
+        discountPercent: positivePercent(variant.discountPercent),
+        priceAfterDiscount: positivePercent(variant.discountPercent)
+          ? (variant.priceAfterDiscount ?? 0)
+          : 0,
         soldQuantity: variant.soldQuantity ?? 0,
         availableQuantity: variant.availableQuantity ?? 0,
         initialStock: 0,
@@ -199,6 +217,7 @@ export default function ProductEditorPage() {
         sizeId: "",
         sku: "",
         price: 0,
+        discountPercent: undefined,
         priceAfterDiscount: 0,
         soldQuantity: 0,
         initialStock: 0,
@@ -213,9 +232,43 @@ export default function ProductEditorPage() {
     value: string | number,
   ) => {
     const previous = variants.find((variant) => variant.id === variantId);
-    const next = variants.map((variant) =>
-      variant.id === variantId ? { ...variant, [field]: value } : variant,
-    );
+    const next = variants.map((variant) => {
+      if (variant.id !== variantId) return variant;
+
+      const updated = { ...variant, [field]: value };
+
+      if (field === "discountPercent") {
+        const discPercent = value === "" ? undefined : Number(value);
+        updated.discountPercent = discPercent;
+        if (discPercent !== undefined && discPercent > 0 && Number(variant.price) > 0) {
+          const calculated = Number(variant.price) * (1 - discPercent / 100);
+          updated.priceAfterDiscount = Math.round(calculated * 100) / 100;
+        } else if (discPercent === 0 || discPercent === undefined) {
+          updated.priceAfterDiscount = 0;
+        }
+      }
+
+      if (field === "price") {
+        const priceNum = Number(value) || 0;
+        const discPercent = variant.discountPercent !== undefined ? Number(variant.discountPercent) : 0;
+        if (discPercent > 0 && priceNum > 0) {
+          const calculated = priceNum * (1 - discPercent / 100);
+          updated.priceAfterDiscount = Math.round(calculated * 100) / 100;
+        }
+      }
+
+      if (field === "priceAfterDiscount") {
+        const priceAfter = Number(value) || 0;
+        const priceNum = Number(variant.price) || 0;
+        if (priceNum > 0 && priceAfter > 0 && priceAfter < priceNum) {
+          updated.discountPercent = Math.round(((priceNum - priceAfter) / priceNum) * 100);
+        } else if (priceAfter === 0 || priceAfter >= priceNum) {
+          updated.discountPercent = undefined;
+        }
+      }
+
+      return updated;
+    });
     setVariants(next);
     // Renaming the last variant of a color carries its tagged images along to the new name.
     if (field === "color" && previous) {
@@ -245,6 +298,9 @@ export default function ProductEditorPage() {
       "",
     [brandOptions, values.brandId],
   );
+  const productDiscount = positivePercent(values.discountPercent);
+  const productTypeLabel =
+    PRODUCT_TYPE_OPTIONS.find((option) => option.value === values.productType)?.label || "";
   const subCategoryLabel = useMemo(
     () =>
       subCategoryOptions.find((option) => option.value === values.subCategoryId)
@@ -257,6 +313,7 @@ export default function ProductEditorPage() {
       name: values.name,
       slug: values.slug,
       subCategoryId: values.subCategoryId,
+      discountPercent: values.discountPercent === "" ? undefined : values.discountPercent,
       variants,
     });
     if (!parsed.success) {
@@ -271,12 +328,21 @@ export default function ProductEditorPage() {
       imageCover: imageCover.trim() || undefined,
       subCategoryId: Number(values.subCategoryId),
       brandId: values.brandId ? Number(values.brandId) : undefined,
+      productType: (values.productType as ProductType) || undefined,
+      discountPercent: positivePercent(values.discountPercent),
       variants: variants.map((variant) => ({
         id: variant.serverId,
         color: variant.color.trim() || undefined,
         sizeId: variant.sizeId ? Number(variant.sizeId) : undefined,
         sku: variant.sku.trim(),
         price: Number(variant.price),
+        discountPercent:
+          variant.discountPercent !== undefined &&
+          variant.discountPercent !== null &&
+          (variant.discountPercent as unknown) !== "" &&
+          !isNaN(Number(variant.discountPercent))
+            ? Number(variant.discountPercent)
+            : undefined,
         priceAfterDiscount: variant.priceAfterDiscount
           ? Number(variant.priceAfterDiscount)
           : undefined,
@@ -429,6 +495,7 @@ export default function ProductEditorPage() {
             />
             <ProductVariants
               variants={variants}
+              productDiscount={productDiscount}
               sizes={sizeOptions}
               onAdd={addVariant}
               onChange={updateVariant}
@@ -438,8 +505,10 @@ export default function ProductEditorPage() {
               name={values.name}
               subcategory={subCategoryLabel}
               brand={brandLabel}
+              type={productTypeLabel}
               images={images}
               variants={variants}
+              productDiscount={productDiscount}
             />
           </div>
           <ProductSummary
@@ -449,6 +518,7 @@ export default function ProductEditorPage() {
             images={images}
             variants={variants}
             cover={cover}
+            productDiscount={productDiscount}
           />
         </div>
         <div className="mt-6 flex items-center gap-2 text-xs text-slate-400">

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ProductImage, ProductVariant } from "@/features/products/types/product-editor.types";
 import { formatMoney } from "@/lib/currency";
+import { salePrice } from "@/features/products/utils/pricing";
+import ProductPhoto from "@/features/products/components/ProductImage";
 
-type SummaryProps = { name: string; brand: string; subcategory: string; images: ProductImage[]; variants: ProductVariant[]; cover?: string };
-export function ProductSummary({ name, brand, subcategory, images, variants, cover }: SummaryProps) {
-  const prices = variants.map((variant) => Number(variant.priceAfterDiscount || variant.price)).filter((price) => price > 0);
+type SummaryProps = { name: string; brand: string; type?: string; subcategory: string; images: ProductImage[]; variants: ProductVariant[]; cover?: string; productDiscount?: number };
+export function ProductSummary({ name, brand, subcategory, images, variants, cover, productDiscount }: SummaryProps) {
+  const prices = variants.map((variant) => salePrice(variant, productDiscount)).filter((price) => price > 0);
   const soldTotal = variants.reduce((total, variant) => total + Number(variant.soldQuantity || 0), 0);
   // Cover first, then the rest of the gallery without duplicates.
   const urls = [...new Set([cover, ...images.map((image) => image.url)].filter((url): url is string => Boolean(url)))];
@@ -18,7 +20,7 @@ export function ProductSummary({ name, brand, subcategory, images, variants, cov
     <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/30">
       <h2 className="text-base font-semibold text-slate-900">Product Preview</h2>
       <div className="relative mt-4 overflow-hidden rounded-lg bg-slate-100">
-        <img src={shown || "/images/product/product-01.jpg"} alt="Product preview" className="aspect-[4/3] w-full object-cover" />
+        <ProductPhoto src={shown || null} className="aspect-[4/3] w-full" />
         {urls.length > 1 && (
           <>
             <button type="button" onClick={() => go(-1)} title="Previous image" className="absolute left-1.5 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-1 text-slate-700 shadow hover:bg-white"><ChevronLeft className="h-4 w-4" /></button>
@@ -54,13 +56,15 @@ export function ProductSummary({ name, brand, subcategory, images, variants, cov
   );
 }
 
-export function ProductReview({ name, subcategory, brand, images, variants }: Omit<SummaryProps, "cover">) {
-  const prices = variants.map((variant) => Number(variant.priceAfterDiscount || variant.price)).filter((price) => price > 0);
+export function ProductReview({ name, subcategory, brand, type, images, variants, productDiscount }: Omit<SummaryProps, "cover">) {
+  const prices = variants.map((variant) => salePrice(variant, productDiscount)).filter((price) => price > 0);
   const soldTotal = variants.reduce((total, variant) => total + Number(variant.soldQuantity || 0), 0);
   const rows = [
     ["Product", name || "Not set"],
     ["Subcategory", subcategory || "Not set"],
     ["Brand", brand || "Not set"],
+    ["Type", type || "Not set"],
+    ["Product Discount", productDiscount ? `${productDiscount}%` : "None"],
     ["Images", `${images.length} images`],
     ["Variants", `${variants.length} variants`],
     ["Price", prices.length ? `${formatMoney(Math.min(...prices))} – ${formatMoney(Math.max(...prices))}` : "Not set"],

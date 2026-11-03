@@ -9,6 +9,13 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { useCategoryDetail, useDeleteCategory, useUpdateCategory } from "@/features/categories/hooks/useCategories";
 import { categorySchema } from "@/features/categories/schemas/category.schema";
 import CategoryDialog, { type CategoryFormState } from "@/features/categories/components/CategoryDialog";
+import { useSubCategories } from "@/features/sub-categories/hooks/useSubCategories";
+
+function formatDate(value?: string) {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
 
 export default function CategoryDetailsPage() {
   const { id } = useParams();
@@ -16,6 +23,9 @@ export default function CategoryDetailsPage() {
   const categoryId = Number(id);
 
   const { data: category = null, isLoading: loading, error: loadFailure } = useCategoryDetail(categoryId);
+  // The detail endpoint leaves sub-category slugs empty; the (cached) list has them.
+  const { data: allSubCategories = [] } = useSubCategories();
+  const slugById = new Map(allSubCategories.map((subCategory) => [subCategory.id, subCategory.slug]));
   const [actionError, setActionError] = useState("");
   const loadError = actionError || (loadFailure ? getApiErrorMessage(loadFailure) : "");
 
@@ -138,7 +148,7 @@ export default function CategoryDetailsPage() {
                               {subCategory.name}
                             </Link>
                           </td>
-                          <td className="px-3 py-4 text-slate-500">{subCategory.slug ?? "—"}</td>
+                          <td className="px-3 py-4 text-slate-500">{subCategory.slug || slugById.get(subCategory.id) || "—"}</td>
                           <td className="px-3 py-4 text-slate-600">
                             <Link to={`/catalog/browse/${categoryId}?sub=${subCategory.id}`} className="hover:text-blue-600">
                               {subCategory.productCount ?? "—"}
@@ -159,8 +169,8 @@ export default function CategoryDetailsPage() {
               <dl className="mt-5 space-y-3 border-t border-slate-100 pt-4 text-sm">
                 <div className="flex justify-between border-b border-slate-100 pb-3"><dt className="text-slate-400">Name</dt><dd className="font-semibold text-slate-700">{category.name}</dd></div>
                 <div className="flex justify-between border-b border-slate-100 pb-3"><dt className="text-slate-400">Slug</dt><dd className="font-medium text-slate-700">{category.slug}</dd></div>
-                {category.createdAt && <div className="flex justify-between border-b border-slate-100 pb-3"><dt className="text-slate-400">Created</dt><dd className="font-medium text-slate-700">{category.createdAt}</dd></div>}
-                {category.updatedAt && <div className="flex justify-between"><dt className="text-slate-400">Updated</dt><dd className="font-medium text-slate-700">{category.updatedAt}</dd></div>}
+                {category.createdAt && <div className="flex justify-between border-b border-slate-100 pb-3"><dt className="text-slate-400">Created</dt><dd className="font-medium text-slate-700">{formatDate(category.createdAt)}</dd></div>}
+                {category.updatedAt && <div className="flex justify-between"><dt className="text-slate-400">Updated</dt><dd className="font-medium text-slate-700">{formatDate(category.updatedAt)}</dd></div>}
               </dl>
             </section>
           </FadeIn>

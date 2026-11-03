@@ -8,7 +8,7 @@ export function getSubCategories() {
 }
 
 export function getSubCategory(id: number) {
-  return api.get<ApiResponse<SubCategoryDetailResponse>>(ENDPOINTS.subCategories.byId(id));
+  return api.get<ApiResponse<SubCategoryDetailResponse>>(ENDPOINTS.subCategories.detail(id));
 }
 
 export function createSubCategory(payload: SubCategoryPayload) {

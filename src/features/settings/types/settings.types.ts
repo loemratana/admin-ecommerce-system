@@ -16,6 +16,16 @@ export type OrderSettings = {
   returnWindowDays: number;
 };
 
+export type InventorySettings = {
+  /** Available stock at or below this is "low": status badge, stats and the low-stock notification. */
+  lowStockThreshold: number;
+};
+
+export type NotificationsSettings = {
+  /** Email customers an order confirmation when they place an order (needs SMTP on the server). */
+  customerOrderEmail: boolean;
+};
+
 export type LocalizationSettings = {
   /** ISO 4217 code; a label only, amounts are never converted. */
   currency: string;
@@ -30,6 +40,8 @@ export type SecuritySettings = {
 export type Settings = {
   store: StoreSettings;
   orders: OrderSettings;
+  inventory: InventorySettings;
+  notifications: NotificationsSettings;
   localization: LocalizationSettings;
   security: SecuritySettings;
   updatedAt: string;
@@ -45,11 +57,13 @@ export type PublicSettings = {
   currency: string;
 };
 
-export type SettingsSection = "store" | "orders" | "localization" | "security";
+export type SettingsSection = "store" | "orders" | "inventory" | "notifications" | "localization" | "security";
 
 export type SettingsPayload = {
   store: StoreSettings;
   orders: OrderSettings;
+  inventory: InventorySettings;
+  notifications: NotificationsSettings;
   localization: LocalizationSettings;
   security: SecuritySettings;
 };

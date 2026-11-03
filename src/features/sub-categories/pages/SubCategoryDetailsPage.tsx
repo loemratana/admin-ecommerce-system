@@ -9,7 +9,7 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { useCategories } from "@/features/categories/hooks/useCategories";
 import { useDeleteSubCategory, useSubCategory, useUpdateSubCategory } from "@/features/sub-categories/hooks/useSubCategories";
 import { subCategorySchema } from "@/features/sub-categories/schemas/sub-category.schema";
-import SubCategoryProductsTable from "@/features/sub-categories/components/SubCategoryProductsTable";
+import FilteredProductsPanel from "@/features/products/components/FilteredProductsPanel";
 import SubCategoryDialog, {
   type SubCategoryFormState,
 } from "@/features/sub-categories/components/SubCategoryDialog";
@@ -220,7 +220,12 @@ export default function SubCategoryDetailsPage() {
               </dl>
             </section>
 
-            <SubCategoryProductsTable products={products} />
+            <FilteredProductsPanel
+              filter={{ subCategoryId }}
+              ownerName={subCategory.name}
+              ownerLabel="sub-category"
+              addProductQuery={`subCategoryId=${subCategoryId}`}
+            />
           </FadeIn>
         ) : null}
 

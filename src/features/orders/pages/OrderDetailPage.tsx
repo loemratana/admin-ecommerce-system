@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft, Check, CircleDollarSign, ClipboardList, FileText, MapPin, PackageCheck, Printer, RotateCcw, Tag, UserRound, XCircle } from "lucide-react";
+import { ArrowLeft, Check, CircleDollarSign, ClipboardList, FileText, MapPin, PackageCheck, RotateCcw, Tag, UserRound, XCircle } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import PageMeta from "@/components/common/PageMeta";
 import FadeIn from "@/components/common/FadeIn";
@@ -111,7 +111,9 @@ export default function OrderDetailPage() {
       const refundNote = paidRefundable > 0
         ? paid?.method === "STRIPE"
           ? ` ${money(paidRefundable)} will be refunded to the customer's card.`
-          : ` ${money(paidRefundable)} will be recorded as refunded; hand it back to the customer.`
+          : paid?.method === "ABA_PAYWAY"
+            ? ` ${money(paidRefundable)} will be recorded as refunded; refund it in the PayWay merchant portal.`
+            : ` ${money(paidRefundable)} will be recorded as refunded; hand it back to the customer.`
         : "";
       if (!window.confirm(`Cancel order #${order.orderNumber}? Reserved stock will be released.${refundNote}`)) return;
     }
@@ -168,9 +170,6 @@ export default function OrderDetailPage() {
           </div>
           {order && (
             <div className="flex flex-wrap gap-2 print:hidden">
-              <button type="button" onClick={() => window.print()} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                <Printer className="h-4 w-4" /> Print
-              </button>
               {REVENUE_STATUSES.includes(order.status) && (
                 <button type="button" disabled={invoiceMutation.isPending} onClick={downloadInvoice} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50">
                   {invoiceMutation.isPending ? <Spinner size="sm" /> : <FileText className="h-4 w-4" />} Invoice PDF
@@ -230,6 +229,11 @@ export default function OrderDetailPage() {
                           <p>
                             {discounted && <span className="mr-1 line-through">{money(item.price)}</span>}
                             {money(unit)} × {item.quantity}
+                            {item.discountPercent !== null && item.discountPercent !== undefined && item.discountPercent > 0 && (
+                              <span className="ml-1.5 font-semibold text-red-600">
+                                (-{item.discountPercent}%)
+                              </span>
+                            )}
                           </p>
                           <p className="mt-1 text-sm font-semibold text-slate-800">{money(item.lineTotal)}</p>
                         </div>
@@ -326,6 +330,7 @@ export default function OrderDetailPage() {
                               <p className="text-red-600">
                                 Refunded {money(p.refundedAmount)} of {money(p.amount)}
                                 {p.method === "CASH_ON_DELIVERY" && " · hand back in cash"}
+                                {p.method === "ABA_PAYWAY" && " · refund in PayWay portal"}
                               </p>
                             )}
                             {p.failureReason && <p className="text-red-600">{p.failureReason}</p>}

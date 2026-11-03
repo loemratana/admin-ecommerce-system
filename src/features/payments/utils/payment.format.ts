@@ -2,10 +2,11 @@ import type { PaymentMethod, PaymentResponse, PaymentStatus } from "@/features/p
 
 type BadgeColor = "primary" | "success" | "error" | "warning" | "info" | "light" | "dark";
 
-export const PAYMENT_METHODS: PaymentMethod[] = ["STRIPE", "CASH_ON_DELIVERY"];
+export const PAYMENT_METHODS: PaymentMethod[] = ["STRIPE", "ABA_PAYWAY", "CASH_ON_DELIVERY"];
 
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
   STRIPE: "Card (Stripe)",
+  ABA_PAYWAY: "ABA PayWay",
   CASH_ON_DELIVERY: "Cash on delivery",
 };
 
@@ -48,6 +49,11 @@ export const REFUND_ROUTE: Record<PaymentMethod, { automatic: boolean; done: str
     done: "Refunded to the customer's card through Stripe. It can take 5–10 business days to show on their statement. Don't refund it again in Stripe.",
     upcoming: "Sent back to the customer's card through Stripe automatically. Don't refund it in Stripe yourself.",
   },
+  ABA_PAYWAY: {
+    automatic: false,
+    done: "Paid with ABA PayWay: the refund is recorded here, but you need to refund the customer in the PayWay merchant portal.",
+    upcoming: "Paid with ABA PayWay: the refund will be recorded here, but you'll need to refund the customer in the PayWay merchant portal.",
+  },
   CASH_ON_DELIVERY: {
     automatic: false,
     done: "Paid in cash on delivery: the refund is recorded, but you need to hand the money back to the customer.",
@@ -58,5 +64,6 @@ export const REFUND_ROUTE: Record<PaymentMethod, { automatic: boolean; done: str
 /** What a pending payment is waiting for, per method. */
 export const PAYMENT_PENDING_HINT: Record<PaymentMethod, string> = {
   STRIPE: "Waiting for the customer to pay on Stripe",
+  ABA_PAYWAY: "Waiting for the customer to pay on ABA PayWay",
   CASH_ON_DELIVERY: "Collected by the courier on delivery",
 };

@@ -7,17 +7,22 @@ export type Product = {
   sku: string;
   category: string;
   brand: string;
+  /** Product type label (Men / Women / Unisex), "—" when not set. */
+  type: string;
   variants: number;
   colors: number;
   sizes: number;
   price: number;
   originalPrice?: number;
+  discountPercent?: number;
+  hasMixedDiscounts?: boolean;
   stock: number;
   skus: number;
   status: ProductStatus;
   stockStatus: StockStatus;
   updated: string;
-  image: string;
+  /** Null when the product has no images. */
+  image: string | null;
   rating: number;
   ratingCount: number;
   colorSwatches: string[];

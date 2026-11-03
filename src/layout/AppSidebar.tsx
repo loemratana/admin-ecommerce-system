@@ -12,7 +12,6 @@ import {
 } from "../icons";
 import { KeyRound, Settings as SettingsIcon, ShieldCheck, Users as UsersIcon } from "lucide-react";
 import { useSidebar } from "../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
   name: string;
@@ -65,8 +64,16 @@ const navItems: NavItem[] = [
       { name: "Users", path: "/system/users", icon: <UsersIcon className="h-4 w-4" /> },
       { name: "Roles", path: "/system/roles", icon: <ShieldCheck className="h-4 w-4" /> },
       { name: "Permissions", path: "/system/permissions", icon: <KeyRound className="h-4 w-4" /> },
-      { name: "Settings", path: "/system/settings", icon: <SettingsIcon className="h-4 w-4" /> },
     ],
+  },
+];
+
+// Pinned to the bottom of the sidebar, apart from the main menu.
+const bottomItems: NavItem[] = [
+  {
+    icon: <SettingsIcon />,
+    name: "Settings",
+    path: "/system/settings",
   },
 ];
 
@@ -256,7 +263,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col pb-16 lg:mt-0 lg:pb-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -297,14 +304,16 @@ const AppSidebar: React.FC = () => {
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
             <div className="flex flex-col gap-4">
               {renderMenuItems(navItems, "main")}
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
       </div>
+      <nav className="shrink-0 border-t border-gray-200 py-4 dark:border-gray-800" aria-label="Settings">
+        {renderMenuItems(bottomItems, "others")}
+      </nav>
     </aside>
   );
 };

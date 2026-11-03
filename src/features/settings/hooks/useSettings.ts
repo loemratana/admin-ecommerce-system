@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPublicSettings, getSettings, updateSettingsSection } from "@/features/settings/api/settings.api";
 import type { SettingsPayload, SettingsSection } from "@/features/settings/types/settings.types";
 import { orderKeys } from "@/features/orders/hooks/useOrders";
+import { inventoryKeys } from "@/features/inventory/hooks/useInventory";
+import { productKeys } from "@/features/products/hooks/useProducts";
 import { useCurrencyStore } from "@/lib/currency";
 
 export const settingsKeys = {
@@ -36,6 +38,11 @@ export function useUpdateSettings<S extends SettingsSection>(section: S) {
       if (section === "localization") useCurrencyStore.getState().setCurrency(settings.localization.currency);
       // Return deadlines shown on orders depend on the return window.
       if (section === "orders") queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      // Stock statuses and low-stock counts are computed with the threshold.
+      if (section === "inventory") {
+        queryClient.invalidateQueries({ queryKey: inventoryKeys.all });
+        queryClient.invalidateQueries({ queryKey: productKeys.all });
+      }
     },
   });
 }

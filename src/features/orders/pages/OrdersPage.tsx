@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { CheckCircle2, ChevronLeft, ChevronRight, ClipboardList, Clock, Eye, FileSpreadsheet, FileText, Package, Search, ShoppingBag, Truck, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardList, Clock, Eye, FileSpreadsheet, FileText, Package, Search, ShoppingBag, Truck, XCircle } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import PageMeta from "@/components/common/PageMeta";
 import FadeIn from "@/components/common/FadeIn";
@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { useDownloadInvoice, useOrders, useOrderStats, useUpdateOrderStatus } from "@/features/orders/hooks/useOrders";
 import ExportOrdersDialog from "@/features/orders/components/ExportOrdersDialog";
+import DataTablePagination from "@/components/common/DataTablePagination";
 import type { OrderStatus, OrderSummaryResponse } from "@/features/orders/types/order.types";
 import {
   ORDER_ACTION_LABEL,
@@ -26,7 +27,8 @@ import {
 } from "@/features/orders/utils/order.format";
 import { PAYMENT_METHOD_LABEL } from "@/features/payments/utils/payment.format";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const DEFAULT_PAGE_SIZE = 20;
 const STATUSES: OrderStatus[] = [...ORDER_FLOW, "CANCELLED"];
 
 const SORT_OPTIONS = [
@@ -48,10 +50,12 @@ export default function OrdersPage() {
   const urlSearch = searchParams.get("q") ?? "";
   const sort = searchParams.get("sort") ?? SORT_OPTIONS[0].value;
   const page = Math.max(0, Number(searchParams.get("page") ?? 1) - 1 || 0);
+  const sizeParam = Number(searchParams.get("size"));
+  const pageSize = PAGE_SIZE_OPTIONS.includes(sizeParam) ? sizeParam : DEFAULT_PAGE_SIZE;
   const [search, setSearch] = useState(urlSearch);
   const [exportOpen, setExportOpen] = useState(false);
 
-  const ordersQuery = useOrders({ status, search: urlSearch || undefined, sort, page, size: PAGE_SIZE });
+  const ordersQuery = useOrders({ status, search: urlSearch || undefined, sort, page, size: pageSize });
   const statsQuery = useOrderStats();
   const statusMutation = useUpdateOrderStatus();
   const invoiceMutation = useDownloadInvoice();
@@ -359,20 +363,16 @@ export default function OrdersPage() {
             </FadeIn>
           )}
 
-          <div className="flex flex-col items-center justify-between gap-3 text-sm text-slate-500 sm:flex-row">
-            <p>
-              Showing {orders.length === 0 ? 0 : page * PAGE_SIZE + 1}–{page * PAGE_SIZE + orders.length} of {totalElements.toLocaleString()} orders
-            </p>
-            <div className="flex items-center gap-1">
-              <button type="button" disabled={page === 0} onClick={() => updateParams({ page: page <= 1 ? undefined : String(page) }, false)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
-                <ChevronLeft className="h-3.5 w-3.5" /> Previous
-              </button>
-              <span className="px-2 text-xs">Page {totalPages === 0 ? 0 : page + 1} of {totalPages}</span>
-              <button type="button" disabled={page + 1 >= totalPages} onClick={() => updateParams({ page: String(page + 2) }, false)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
-                Next <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            totalElements={totalElements}
+            totalPages={totalPages}
+            itemLabel="orders"
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageChange={(next) => updateParams({ page: next === 0 ? undefined : String(next + 1) }, false)}
+            onPageSizeChange={(size) => updateParams({ size: size === DEFAULT_PAGE_SIZE ? undefined : String(size) })}
+          />
         </div>
       </main>
       <ExportOrdersDialog isOpen={exportOpen} onClose={() => setExportOpen(false)} defaultStatus={status} />

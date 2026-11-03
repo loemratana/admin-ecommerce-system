@@ -7,11 +7,21 @@ export const productEditorSchema = z.object({
   name: z.string().trim().min(1, basicInfoMessage),
   slug: z.string().trim().min(1, basicInfoMessage),
   subCategoryId: z.string().min(1, basicInfoMessage),
+  discountPercent: z.coerce
+    .number()
+    .min(0, "Product discount cannot be negative.")
+    .max(100, "Product discount cannot exceed 100%.")
+    .optional(),
   variants: z
     .array(
       z.object({
         sku: z.string().trim().min(1, variantMessage),
         price: z.coerce.number().gt(0, variantMessage),
+        discountPercent: z.coerce
+          .number()
+          .min(0, "Discount cannot be negative.")
+          .max(100, "Discount cannot exceed 100%.")
+          .optional(),
       }),
     )
     .min(1, "Add at least one variant."),

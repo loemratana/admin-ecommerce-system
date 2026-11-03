@@ -43,6 +43,7 @@ export interface OrderItemResponse {
   imageUrl: string | null;
   quantity: number;
   price: number;
+  discountPercent?: number | null;
   priceAfterDiscount: number | null;
   lineTotal: number;
 }

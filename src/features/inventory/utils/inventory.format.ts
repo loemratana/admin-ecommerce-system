@@ -2,8 +2,6 @@ import type { InventoryResponse, InventoryStatus, InventoryTransactionType } fro
 // Store currency from Settings / Localization; re-exported for existing imports.
 export { formatPrice } from "@/lib/currency";
 
-export const PLACEHOLDER_IMAGE = "/images/product/product-01.jpg";
-
 export const STATUS_LABEL: Record<InventoryStatus, string> = {
   IN_STOCK: "In Stock",
   LOW_STOCK: "Low Stock",
@@ -31,8 +29,9 @@ export function variantLabel(item: InventoryResponse) {
   return parts.length ? parts.join(" / ") : "Default";
 }
 
-export function productImage(item: InventoryResponse) {
-  return item.product?.imageUrl || PLACEHOLDER_IMAGE;
+/** Null when the product has no image; render with ProductImage to get a blank card. */
+export function productImage(item: InventoryResponse): string | null {
+  return item.product?.imageUrl || null;
 }
 
 

@@ -1,5 +1,5 @@
 // Mirrors the Spring DTOs in ecommerce-api/payment/dto.
-export type PaymentMethod = "STRIPE" | "CASH_ON_DELIVERY";
+export type PaymentMethod = "STRIPE" | "ABA_PAYWAY" | "CASH_ON_DELIVERY";
 
 /** PENDING -> SUCCEEDED -> PARTIALLY_REFUNDED -> REFUNDED; a pending payment can also end FAILED, EXPIRED or CANCELLED. */
 export type PaymentStatus = "PENDING" | "SUCCEEDED" | "FAILED" | "EXPIRED" | "CANCELLED" | "PARTIALLY_REFUNDED" | "REFUNDED";

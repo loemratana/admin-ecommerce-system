@@ -1,6 +1,6 @@
 import { RotateCcw, Search } from "lucide-react";
 import { Select } from "@/components/ui/select";
-import type { ProductFilters } from "@/features/products/types/product.types";
+import { PRODUCT_TYPE_OPTIONS, type ProductFilters, type ProductType } from "@/features/products/types/product.types";
 
 type ProductToolbarProps = {
   search: string;
@@ -44,6 +44,13 @@ export default function ProductToolbar({
         <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Search products, SKU..." className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100" />
       </label>
       <div className="flex flex-wrap items-center gap-2">
+        <Select
+          value={filters.type ?? ""}
+          onValueChange={(value) => onFiltersChange({ ...filters, type: (value as ProductType) || undefined })}
+          options={[{ value: "", label: "All types" }, ...PRODUCT_TYPE_OPTIONS]}
+          placeholder="All types"
+          className="min-w-32"
+        />
         <Select
           value={filters.brandId === undefined ? "" : String(filters.brandId)}
           onValueChange={(value) => onFiltersChange({ ...filters, brandId: value ? Number(value) : undefined })}

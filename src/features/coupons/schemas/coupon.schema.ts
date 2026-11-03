@@ -26,6 +26,7 @@ export const couponSchema = z
       .trim()
       .refine((value) => value === "" || (Number.isInteger(Number(value)) && Number(value) > 0), "Usage limit must be a whole number greater than 0."),
     active: z.boolean(),
+    showInStorefront: z.boolean(),
   })
   .refine((values) => values.discountType !== "PERCENTAGE" || Number(values.discountValue) <= 100, {
     message: "Percentage discount cannot exceed 100%.",

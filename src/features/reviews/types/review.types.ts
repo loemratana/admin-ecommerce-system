@@ -5,12 +5,13 @@ export interface ReviewAuthor {
   profileImage: string;
 }
 
+// The review API currently fills only id, slug and imageUrl; name and price come back null.
 export interface ReviewProductSummary {
   id: number;
-  name: string;
-  slug: string;
-  price: number;
-  imageUrl: string;
+  name: string | null;
+  slug: string | null;
+  price: number | null;
+  imageUrl: string | null;
 }
 
 export interface ProductReview {

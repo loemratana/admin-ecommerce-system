@@ -38,6 +38,14 @@ function Actions({ coupon, onEdit, onToggleStatus, onDelete }: Omit<Props, "coup
   );
 }
 
+function StorefrontBadge({ coupon }: { coupon: Coupon }) {
+  return coupon.showInStorefront ? (
+    <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-600/20">Shown</span>
+  ) : (
+    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500 ring-1 ring-inset ring-slate-300">Private</span>
+  );
+}
+
 export default function CouponsTable({ coupons, pageResetKey, onEdit, onToggleStatus, onDelete }: Props) {
   const [{ pageIndex: page }, setPagination] = useTablePagination(coupons.length, PAGE_SIZE, pageResetKey);
   const setPage = (update: (page: number) => number) => setPagination((current) => ({ ...current, pageIndex: update(current.pageIndex) }));
@@ -48,10 +56,10 @@ export default function CouponsTable({ coupons, pageResetKey, onEdit, onToggleSt
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-200/30">
       <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-[800px] text-left text-sm">
+        <table className="w-full min-w-[900px] text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
             <tr>
-              {["Code", "Discount", "Minimum order", "Usage", "Remaining", "Valid until", "Status", ""].map((h) => (
+              {["Code", "Discount", "Minimum order", "Usage", "Remaining", "Valid until", "Storefront", "Status", ""].map((h) => (
                 <th key={h} className="px-4 py-3 first:pl-5">{h}</th>
               ))}
             </tr>
@@ -65,6 +73,7 @@ export default function CouponsTable({ coupons, pageResetKey, onEdit, onToggleSt
                 <td className="px-4 py-4 text-slate-600">{formatUsage(coupon)}</td>
                 <td className="px-4 py-4 text-slate-600">{coupon.remainingUses ?? "∞"}</td>
                 <td className="px-4 py-4 text-xs text-slate-500">{formatDate(coupon.expiryDate)}</td>
+                <td className="px-4 py-4"><StorefrontBadge coupon={coupon} /></td>
                 <td className="px-4 py-4"><Status coupon={coupon} /></td>
                 <td className="px-4 py-4"><Actions coupon={coupon} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} /></td>
               </tr>
@@ -81,6 +90,7 @@ export default function CouponsTable({ coupons, pageResetKey, onEdit, onToggleSt
                 {formatDiscount(coupon)} off{coupon.minOrderAmount != null && ` · min. ${formatMinimum(coupon)}`}
               </p>
               <p className="mt-1 text-xs text-slate-400">{formatUsage(coupon)} used · until {formatDate(coupon.expiryDate)}</p>
+              <div className="mt-2"><StorefrontBadge coupon={coupon} /></div>
             </div>
             <div className="flex flex-col items-end gap-2">
               <Status coupon={coupon} />

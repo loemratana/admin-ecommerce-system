@@ -2,10 +2,20 @@ import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useMe } from "@/features/profile/hooks/useProfile";
+import UserAvatar from "@/components/common/UserAvatar";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const logout = useAuthStore((state) => state.logout);
+  const storedUser = useAuthStore((state) => state.user);
+  const storedEmail = useAuthStore((state) => state.email);
+  // Refreshes the signed-in user (and the copy in the auth store) so the photo and name stay current.
+  const { data: me } = useMe();
+  const user = me ?? storedUser;
+  const fullName = user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.name : "";
+  const email = user?.email ?? storedEmail ?? "";
+  const displayName = fullName || email || "Account";
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -20,11 +30,9 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src="/images/user/owner.jpg" alt="User" />
-        </span>
+        <UserAvatar name={displayName} image={user?.profileImage} className="mr-3 h-11 w-11 text-sm" />
 
-        <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
+        <span className="mr-1 hidden max-w-[10rem] truncate font-medium text-theme-sm sm:block">{user?.firstName || displayName}</span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -51,12 +59,14 @@ export default function UserDropdown() {
         className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >
         <div>
-          <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Musharof Chowdhury
+          <span className="block truncate font-medium text-gray-700 text-theme-sm dark:text-gray-400">
+            {displayName}
           </span>
-          <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
-          </span>
+          {email && email !== displayName && (
+            <span className="mt-0.5 block truncate text-theme-xs text-gray-500 dark:text-gray-400">
+              {email}
+            </span>
+          )}
         </div>
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">

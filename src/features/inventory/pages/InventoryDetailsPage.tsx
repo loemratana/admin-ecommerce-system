@@ -16,6 +16,7 @@ import {
   productImage,
   variantLabel,
 } from "@/features/inventory/utils/inventory.format";
+import ProductImage from "@/features/products/components/ProductImage";
 
 function StatCard({ label, value, tone = "text-slate-900" }: { label: string; value: number; tone?: string }) {
   return (
@@ -114,7 +115,7 @@ export default function InventoryDetailsPage() {
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/30">
             {inventory && detail.data ? (
               <>
-                <img src={productImage(inventory)} alt={title} className="aspect-square w-full rounded-lg object-cover" />
+                <ProductImage src={productImage(inventory)} className="aspect-square w-full rounded-lg" />
                 <dl className="mt-5 space-y-4 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-slate-500">Product</dt>

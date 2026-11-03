@@ -496,6 +496,7 @@ returns the same shape, looked up by email instead of id.
 | `sizeId` | number | | FK to a `ProductSize` |
 | `sku` | string | ✓ | max 50 chars, unique |
 | `price` | number | ✓ | must be > 0 |
+| `discountPercent` | number | | between 0 and 100 |
 | `priceAfterDiscount` | number | | must be ≥ 0 |
 | `soldQuantity` | number | | default `0`, must be ≥ 0 |
 
@@ -536,6 +537,8 @@ returns the same shape, looked up by email instead of id.
 | `size` | `{ id, name }` |
 | `sku` | string |
 | `price` | number |
+| `discountPercent` | number |
+| `discountAmount` | number |
 | `priceAfterDiscount` | number |
 | `soldQuantity` | number |
 

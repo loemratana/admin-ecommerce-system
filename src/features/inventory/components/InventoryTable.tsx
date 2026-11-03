@@ -9,6 +9,7 @@ import {
   productImage,
   variantLabel,
 } from "@/features/inventory/utils/inventory.format";
+import ProductImage from "@/features/products/components/ProductImage";
 
 type Props = {
   items: InventoryResponse[];
@@ -92,7 +93,7 @@ export default function InventoryTable({ items, selectedIds, onToggle, onToggleA
                 </td>
                 <td className="px-3 py-4">
                   <div className="flex items-center gap-3">
-                    <img src={productImage(item)} alt="" className="h-11 w-11 rounded-lg object-cover" />
+                    <ProductImage src={productImage(item)} className="h-11 w-11 shrink-0 rounded-lg" />
                     <div>
                       <Link to={`/catalog/inventory/${variantId(item)}`} className="font-semibold text-slate-800 hover:text-blue-600">
                         {item.product?.name ?? "Unknown product"}
@@ -117,7 +118,7 @@ export default function InventoryTable({ items, selectedIds, onToggle, onToggleA
       <div className="divide-y divide-slate-100 lg:hidden">
         {items.map((item) => (
           <article key={item.id} className="flex items-center gap-3 p-3">
-            <img src={productImage(item)} alt="" className="h-11 w-11 rounded-lg object-cover" />
+            <ProductImage src={productImage(item)} className="h-11 w-11 shrink-0 rounded-lg" />
             <div className="min-w-0 flex-1">
               <Link to={`/catalog/inventory/${variantId(item)}`} className="block truncate text-sm font-semibold text-slate-800">
                 {item.product?.name ?? "Unknown product"}

@@ -42,6 +42,10 @@ export const orderSettingsSchema = z.object({
   returnWindowDays: wholeNumber("Return window", 0, 365, "days"),
 });
 
+export const inventorySettingsSchema = z.object({
+  lowStockThreshold: wholeNumber("Low-stock threshold", 0, 100000, "units"),
+});
+
 export const localizationSettingsSchema = z.object({
   currency: z.string().regex(/^[A-Z]{3}$/, "Pick a currency."),
   timezone: z.string().min(1, "Pick a timezone."),
@@ -53,5 +57,6 @@ export const securitySettingsSchema = z.object({
 
 export type StoreSettingsFormValues = z.infer<typeof storeSettingsSchema>;
 export type OrderSettingsFormValues = z.infer<typeof orderSettingsSchema>;
+export type InventorySettingsFormValues = z.infer<typeof inventorySettingsSchema>;
 export type LocalizationSettingsFormValues = z.infer<typeof localizationSettingsSchema>;
 export type SecuritySettingsFormValues = z.infer<typeof securitySettingsSchema>;

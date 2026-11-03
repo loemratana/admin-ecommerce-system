@@ -11,6 +11,8 @@ export interface Coupon {
   /** ISO local date-time from the API, e.g. "2026-12-31T23:59:59" */
   expiryDate: string;
   active: boolean;
+  /** Listed for shoppers in the storefront; false = only people who know the code can use it */
+  showInStorefront: boolean;
   /** null = unlimited */
   usageLimit: number | null;
   usedCount: number;
@@ -26,6 +28,7 @@ export interface CouponPayload {
   minOrderAmount: number | null;
   expiryDate: string;
   active: boolean;
+  showInStorefront: boolean;
   usageLimit: number | null;
 }
 

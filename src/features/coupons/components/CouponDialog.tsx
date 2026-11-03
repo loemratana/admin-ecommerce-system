@@ -64,6 +64,13 @@ export default function CouponDialog({ mode, form, saving, error, onChange, onCl
             <input type="checkbox" checked={form.active} onChange={(event) => onChange("active", event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-blue-600" />
             {mode === "edit" ? "Active" : "Active immediately"}
           </label>
+          <label className="flex items-start gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+            <input type="checkbox" checked={form.showInStorefront} onChange={(event) => onChange("showInStorefront", event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600" />
+            <span>
+              Show in storefront
+              <span className="mt-0.5 block text-xs font-normal text-slate-400">Listed on product pages and at checkout. Leave off for private codes you give to specific customers.</span>
+            </span>
+          </label>
         </div>
         <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
           <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>

@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Archive, ArchiveRestore, Eye, Pencil, Star } from "lucide-react";
 import type { Product, ProductAction } from "@/features/products/types/product-list.types";
-import { PRODUCT_PLACEHOLDER_IMAGE } from "@/features/products/utils/product.mapper";
+import ProductImage from "@/features/products/components/ProductImage";
 import { formatMoney } from "@/lib/currency";
 
 type ProductCardProps = {
@@ -14,7 +14,7 @@ type ProductCardProps = {
 const MAX_SWATCHES = 5;
 
 export default function ProductCard({ product, selected = false, onToggle, onAction }: ProductCardProps) {
-  const discount = product.originalPrice ? Math.round((1 - product.price / product.originalPrice) * 100) : 0;
+  const discount = product.discountPercent ?? (product.originalPrice ? Math.round((1 - product.price / product.originalPrice) * 100) : 0);
   const extraColors = product.colorSwatches.length - MAX_SWATCHES;
 
   return (
@@ -24,21 +24,14 @@ export default function ProductCard({ product, selected = false, onToggle, onAct
       }`}
     >
       <div className="relative aspect-square overflow-hidden bg-slate-50">
-        <Link to={`/catalog/products/${product.id}`} aria-label={product.name}>
-          <img
-            src={product.image}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            onError={(event) => {
-              if (!event.currentTarget.src.endsWith(PRODUCT_PLACEHOLDER_IMAGE)) event.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
-            }}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-          />
+        <Link to={`/catalog/products/${product.id}`} aria-label={product.name} className="block h-full w-full">
+          <ProductImage src={product.image} className="h-full w-full transition duration-300 group-hover:scale-105" />
         </Link>
 
         {discount > 0 && (
-          <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">-{discount}%</span>
+          <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
+            {product.hasMixedDiscounts ? `Up to -${discount}%` : `-${discount}%`}
+          </span>
         )}
 
         {onToggle && (
@@ -91,9 +84,16 @@ export default function ProductCard({ product, selected = false, onToggle, onAct
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-400">
-          {product.brand !== "—" ? product.brand : product.category}
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-400">
+            {product.brand !== "—" ? product.brand : product.category}
+          </p>
+          {product.type !== "—" && (
+            <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-600/20">
+              {product.type}
+            </span>
+          )}
+        </div>
         <Link to={`/catalog/products/${product.id}`} className="mt-1 line-clamp-2 min-h-[2.5rem] text-sm font-semibold text-slate-800 hover:text-blue-600">
           {product.name}
         </Link>
@@ -107,9 +107,16 @@ export default function ProductCard({ product, selected = false, onToggle, onAct
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
           <div>
-            <p className="text-base font-bold text-slate-900">
-              {product.price > 0 ? formatMoney(product.price) : "—"}
-            </p>
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-base font-bold text-slate-900">
+                {product.price > 0 ? formatMoney(product.price) : "—"}
+              </p>
+              {discount > 0 && (
+                <span className="text-xs font-semibold text-red-600">
+                  {product.hasMixedDiscounts ? `Up to ${discount}% off` : `${discount}% off`}
+                </span>
+              )}
+            </div>
             {product.originalPrice && <p className="text-xs text-slate-400 line-through">{formatMoney(product.originalPrice)}</p>}
           </div>
           {product.colorSwatches.length > 0 ? (

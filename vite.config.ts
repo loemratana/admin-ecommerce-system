@@ -5,6 +5,10 @@ import path from "node:path";
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    // Allow opening the dev server through a Cloudflare quick tunnel (https://<name>.trycloudflare.com)
+    allowedHosts: [".trycloudflare.com"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

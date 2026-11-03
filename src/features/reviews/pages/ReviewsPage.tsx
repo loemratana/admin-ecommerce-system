@@ -7,7 +7,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { AlertCircle, MessageSquare, Pencil, Search, Star, ThumbsUp, Trash2, X } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, ArrowUpDown, MessageSquare, Pencil, Search, Star, ThumbsUp, Trash2, X } from "lucide-react";
 import { Link } from "react-router";
 import PageMeta from "@/components/common/PageMeta";
 import FadeIn from "@/components/common/FadeIn";
@@ -30,6 +30,8 @@ import ReviewDialog, { type ReviewFormState } from "@/features/reviews/component
 import { reviewSchema } from "@/features/reviews/schemas/review.schema";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import type { ProductReview } from "@/features/reviews/types/review.types";
+import { reviewProductName } from "@/features/reviews/utils/review.format";
+import ProductImage from "@/features/products/components/ProductImage";
 import { formatMoney } from "@/lib/currency";
 
 const emptyForm: ReviewFormState = { title: "", ratings: 5, comment: "" };
@@ -126,21 +128,23 @@ export default function ReviewsPage() {
     window.setTimeout(() => setBanner(""), 3000);
   };
 
-  const productOptions = useMemo(
-    () => Array.from(new Set(reviews.map((review) => review.product.name))).sort(),
-    [reviews],
-  );
+  // Filter by product id: names may repeat or be missing (see reviewProductName).
+  const productOptions = useMemo(() => {
+    const byId = new Map<number, string>();
+    for (const review of reviews) byId.set(review.product.id, reviewProductName(review.product));
+    return [...byId].map(([id, name]) => ({ value: String(id), label: name })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [reviews]);
 
   const filtered = useMemo(
     () =>
       reviews.filter(
         (review) =>
           (!search ||
-            `${review.user.firstName} ${review.user.lastName} ${review.product.name} ${review.title} ${review.comment}`
+            `${review.user.firstName} ${review.user.lastName} ${reviewProductName(review.product)} ${review.title} ${review.comment}`
               .toLowerCase()
               .includes(search.toLowerCase())) &&
           (rating === "all" || review.ratings === Number(rating)) &&
-          (product === "all" || review.product.name === product),
+          (product === "all" || String(review.product.id) === product),
       ),
     [reviews, search, rating, product],
   );
@@ -257,6 +261,7 @@ export default function ReviewsPage() {
     {
       id: "user",
       header: "Customer",
+      accessorFn: (review) => `${review.user.firstName} ${review.user.lastName}`,
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <Avatar name={`${row.original.user.firstName} ${row.original.user.lastName}`} image={row.original.user.profileImage} />
@@ -269,14 +274,19 @@ export default function ReviewsPage() {
     {
       id: "product",
       header: "Product",
-      cell: ({ row }) => (
-        <div className="flex min-w-[155px] items-center gap-2">
-          {row.original.product.imageUrl && (
-            <img src={row.original.product.imageUrl} alt="" className="h-9 w-9 rounded-md object-cover" />
-          )}
-          <p className="font-medium text-slate-700">{row.original.product.name}</p>
-        </div>
-      ),
+      accessorFn: (review) => reviewProductName(review.product),
+      cell: ({ row }) => {
+        const product = row.original.product;
+        return (
+          <Link to={`/catalog/products/${product.id}`} className="group flex min-w-[200px] items-center gap-3">
+            <ProductImage src={product.imageUrl} className="h-10 w-10 shrink-0 rounded-lg ring-1 ring-slate-200" />
+            <div className="min-w-0">
+              <p className="truncate font-medium text-slate-800 group-hover:text-blue-600">{reviewProductName(product)}</p>
+              <p className="text-xs text-slate-400">ID #{product.id}</p>
+            </div>
+          </Link>
+        );
+      },
     },
     {
       accessorKey: "ratings",
@@ -286,6 +296,7 @@ export default function ReviewsPage() {
     {
       id: "comment",
       header: "Review",
+      enableSorting: false,
       cell: ({ row }) => (
         <button
           type="button"
@@ -309,6 +320,7 @@ export default function ReviewsPage() {
     {
       id: "actions",
       header: "",
+      enableSorting: false,
       cell: ({ row }) => <ReviewActions review={row.original} onEdit={openEdit} onDelete={setDeleteTarget} />,
     },
   ];
@@ -414,7 +426,7 @@ export default function ReviewsPage() {
             <Select
               value={product}
               onValueChange={applyFilter(setProduct)}
-              options={["all", ...productOptions].map((value) => ({ value, label: value === "all" ? "All Products" : value }))}
+              options={[{ value: "all", label: "All Products" }, ...productOptions]}
               placeholder="Product"
               className="xl:w-56"
             />
@@ -442,8 +454,15 @@ export default function ReviewsPage() {
                     <thead className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
                       <tr>
                         {table.getHeaderGroups()[0].headers.map((header) => (
-                          <th key={header.id} className="px-4 py-3 first:pl-5">
-                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          <th key={header.id} className="px-4 py-3 first:pl-5" aria-sort={header.column.getIsSorted() === "asc" ? "ascending" : header.column.getIsSorted() === "desc" ? "descending" : undefined}>
+                            {header.column.getCanSort() ? (
+                              <button type="button" onClick={header.column.getToggleSortingHandler()} className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-slate-700">
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                {header.column.getIsSorted() === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : header.column.getIsSorted() === "desc" ? <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />}
+                              </button>
+                            ) : (
+                              flexRender(header.column.columnDef.header, header.getContext())
+                            )}
                           </th>
                         ))}
                       </tr>
@@ -495,7 +514,7 @@ export default function ReviewsPage() {
       </main>
 
       {detail && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/20" onClick={() => setDetail(null)}>
+        <div className="fixed inset-0 z-[60] flex justify-end bg-slate-900/20" onClick={() => setDetail(null)}>
           <aside className="review-detail h-full w-full max-w-lg overflow-y-auto bg-white p-6 shadow-xl" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Review</h2>
@@ -517,8 +536,13 @@ export default function ReviewsPage() {
                 </div>
               </div>
               <div className="mt-8 border-t border-slate-100 pt-5">
-                <p className="font-semibold text-slate-800">{detail.product.name}</p>
-                <p className="mt-1 text-sm text-slate-500">{formatMoney(detail.product.price)}</p>
+                <Link to={`/catalog/products/${detail.product.id}`} className="flex items-center gap-3 hover:text-blue-600">
+                  <ProductImage src={detail.product.imageUrl} className="h-12 w-12 shrink-0 rounded-lg ring-1 ring-slate-200" />
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-slate-800">{reviewProductName(detail.product)}</p>
+                    {detail.product.price != null && <p className="mt-1 text-sm text-slate-500">{formatMoney(detail.product.price)}</p>}
+                  </div>
+                </Link>
               </div>
               <div className="mt-8 flex gap-2 border-t border-slate-100 pt-5">
                 <button
