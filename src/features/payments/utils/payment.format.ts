@@ -64,6 +64,6 @@ export const REFUND_ROUTE: Record<PaymentMethod, { automatic: boolean; done: str
 /** What a pending payment is waiting for, per method. */
 export const PAYMENT_PENDING_HINT: Record<PaymentMethod, string> = {
   STRIPE: "Waiting for the customer to pay on Stripe",
-  ABA_PAYWAY: "Waiting for the customer to pay on ABA PayWay",
+  ABA_PAYWAY: "Waiting for the customer to pay on ABA PayWay (checked with PayWay automatically every 30 seconds)",
   CASH_ON_DELIVERY: "Collected by the courier on delivery",
 };

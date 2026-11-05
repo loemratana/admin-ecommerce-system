@@ -12,11 +12,22 @@ export const orderKeys = {
   detail: (orderNumber: string) => [...orderKeys.all, "detail", orderNumber] as const,
 };
 
+/**
+ * An order paid online (ABA PayWay / Stripe) turns PAID on the server without anyone touching the
+ * dashboard: the API checks pending payments every 30s. Refresh while such an order is on screen.
+ */
+const AWAITING_PAYMENT_REFRESH_MS = 15_000;
+
+const awaitsOnlinePayment = (order: { status: OrderStatus; paymentMethod: string | null } | undefined) =>
+  order?.status === "PENDING" && order.paymentMethod !== null && order.paymentMethod !== "CASH_ON_DELIVERY";
+
 export function useOrders(query: OrderQuery) {
   return useQuery({
     queryKey: orderKeys.list(query),
     queryFn: async () => (await getOrders(query)).data.data,
     placeholderData: keepPreviousData,
+    refetchInterval: (q) =>
+      q.state.data?.content.some(awaitsOnlinePayment) ? AWAITING_PAYMENT_REFRESH_MS * 2 : false,
   });
 }
 
@@ -32,6 +43,7 @@ export function useOrder(orderNumber: string | undefined) {
     queryKey: orderKeys.detail(orderNumber ?? ""),
     queryFn: async () => (await getOrder(orderNumber as string)).data.data,
     enabled: Boolean(orderNumber),
+    refetchInterval: (q) => (awaitsOnlinePayment(q.state.data) ? AWAITING_PAYMENT_REFRESH_MS : false),
   });
 }
 
