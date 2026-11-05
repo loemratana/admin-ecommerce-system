@@ -5,6 +5,7 @@ import path from "node:path";
 
 // https://vite.dev/config/
 export default defineConfig({
+  envPrefix: ["VITE_", "API_BASE_URL"],
   server: {
     // Allow opening the dev server through a Cloudflare quick tunnel (https://<name>.trycloudflare.com)
     allowedHosts: [".trycloudflare.com"],
